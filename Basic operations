@@ -1,1 +1,193 @@
+Vmwareにインストールしたlinuxで基本操作確認する
 ls -l ファイルやフォルダ詳細表示
+echo "test" > test2 ファイル作成
+touch newfile 空のファイル作成
+cd ../　一つ上の階層へ移動
+cd - ひとつ前のフォルダへ戻る
+echo $HOME 変数の中身を表示
+/ ディレクトリ　linuxのディレクトリの頂点
+pwd カレントディレク（現在のディレクトリ）確認　print working directory
+./　カレントディレクトリを表す 相対パス表記で利用
+clear　表示内容を消してくれる
+cd ../../etc/passwd 相対パスで表示
+ある程度文字を入力したあとのTabキー押下で文字補完してくれる
+mkdir ディレクトリ作成
+rmdir ディレクトリ削除
+[root@localhost ～]#  #の時はrootユーザのプロンプト、$の場合は一般ユーザのプロンプト
+
+ファイル名のパターンマッチ、ワイルドカード展開　グロブ（glob）
+ls -l [ab]*  ファイル名がaもしくはbではじまり、その後の文字列は何でもよい
+ls -l [a-c]* ファイル名がa,b,cいずれかではじまり、その後の文字列はなんでもよい
+ls -l [^ab]* 先頭がa,b以外で、その後の文字列はなんでもよい　キャレット^　は～以外
+ls -l a?.sh  ?は任意の文字でよい
+ls -l {a*,b*,*es*}  ｛｝で複数条件を指定できる
+
+検索
+grep root /etc/*  etc配下のすべてのファイルを見てrootのある行を抽出してくれる
+grep -i 大文字小文字を区別しない
+grep -iv 反転
+grep ro. /etc/passwd  .は任意の文字　正規表現
+
+表示
+less 1ページずつ表示　f進む　b戻る　　catで大量表示されるときに使用　q終了　/で検索できる
+grep root /etc/* | less 抽出した行をlessで表示
+head -20 /etc/passwd 先頭20行だけ表示
+tail /etc/passwd 末尾１０行表示
+tail -f /etc/passwd  リアルタイムで末尾10行表示
+
+パーミッション
+-rwxr-xr-x 1 root root
+r読み取り権限、w書き込み権限、x Execute実行権限、-権限なし
+１：-ファイルの種類 ｄならディレクトリ
+２~４：所有者の権限
+５~７：同グループ
+８~１０：その他
+１１~１３：ファイルがリンクされている数が１
+１４~１７：所有者がroot
+１８~２２：rootグループ所属
+chmod 644 ファイル名　　⇒　rw-r--r--
+ls -l はllで省略
+
+sudoなど
+sudo コマンド名　　rootユーザとして実行
+less /etc/sudoers　　sudoでコマンド実行できるユーザを確認できる
+sudo su -   suスイッチユーザ、-設定を引継ぎ
+su - ユーザ名　　ユーザ名にユーザを変更
+
+id
+uid ユーザID
+gid プライマリーユーザグループID
+groups 所属しているすべてのグループ
+
+.sshなど
+ls -a  隠しファイルを含めて表示
+ls -a .ssh　　.ssh隠しディレクトリの中にknown_hostsが出てくる
+known_hostsファイルがある。
+SSH でサーバーに初めて接続したときに、その サーバー側の公開鍵情報 を保存するファイル
+これにより、次回以降の接続で「本当に同じサーバーかどうか」を確認できます。
+ssh-rsa → RSA 方式の公開鍵
+ecdsa-sha2-nistp256 → ECDSA 方式
+ed25519（これも楕円曲線暗号の一種）がより推奨される
+cat known_hosts
+IPのあとにssh-rsaやecdsa-sha2-nistp256などがある
+ls -la 詳細に隠しファイルも含めて表示
+
+＞について
+ll > c　　llの結果をｃに格納して
+ll
+cat c　　で結果が格納されていた
+echo test >> c   最後にtestが追記される
+
+| パイプに関してについて
+ひとつのコマンドに出力を別のコマンドの入力値として渡す
+ps aux
+ps = Process Status（プロセスの状態を表示）
+ a = 他のユーザーのプロセスも含めて表示
+ u = ユーザー名や開始時間などを表示（ユーザーフォーマット）
+ x = 端末に紐付いていないプロセスも表示
+ps aux | grep ssh
+wc -l は Linux の 行数を数えるコマンド
+ps aux | grep ssh| wc -l
+ps aux | grep ssh| wc -l > s.txt    s.txtに行数が入っていた
+
+シェル変数と環境変数
+shell=test
+echo $shell 出力はtestだった
+printenv | grep shell   何も表示されない（環境変数として設定されているものはない）
+export shell
+printenv | grep shell   shell=testと表示された
+
+manについて
+man コマンド　　説明が見れる
+
+which コマンド
+そのコマンドが 実行されるファイルのパス を表示
+which ls
+/usr/bin/ls
+シェルはコマンドを探すときに PATH 環境変数に並んでいるディレクトリを順に探す
+echo $PATH  で探すディレクトリが表示できる（もちろん/usr/bin/が存在する）
+
+パスを通す
+PATH=$PATH:探してほしいディレクトリのパスを追加する
+echo $PATHで追加されていることを確認
+環境変数消してもexitでシェルを抜けて開きなおせば元に戻る
+
+コマンドの終了コード表示する
+echo $?
+
+&&　ダブル・アンパサンド
+ls && date  lsコマンドが成功したときのみdate実行
+
+|| 
+ls || date  左側のコマンドが失敗したときのみdateを実行する
+
+~
+ユーザのホームディレクトリ
+
+cdのみ押下でユーザのホームディレクトリへ
+
+''シングルクォーテーション
+そのまま扱う
+
+""ダブルクォーテーション
+vi テキストファイル編集
+vi test
+i 　編集
+ctrl c  編集モードを抜けて
+:w　　保存
+:q 　で終了
+/  検索できる
+:q ファイル名　　別名で保存できる
+:q!  これまでの編集内容を破棄してプロンプトに戻れる
+
+パッケージ管理
+yum dnf
+リポジトリ　ソフトウェア（パッケージ）保管場所
+dnf install python  
+dnf list installed 現在インストールされているパッケージを表示
+dnf list installed | grep python | wc -l  57と表示された
+dnf list installed |　less   /python  検索を先に進めるn lessコマンドを抜けるq
+dnf update 新しいバージョンにインストールできるパッケージを表示してくれる
+dnf update python
+dnf remove python アンインストール
+dnf search python  パッケージ検索
+dnf info httpd  詳細表示
+
+top
+リアルタイムにプロセスやリソースの使用状況を監視するコマンド qで抜ける
+
+htop
+dnf install htop  htopインストール
+メタデータ期限切れと出た
+dnf はインターネット上のリポジトリからパッケージ情報を取ってきますが、毎回取得すると遅いので キャッシュ を使っています。
+そのキャッシュの有効期限が切れると「期限切れ」と表示され、再取得が必要になります。
+dnf makecache
+引数に一致する結果がありません
+epelを有効化
+which　htop　　パスが通っているか
+
+リポジトリに関して
+cd /etc/yum.repos.d/
+ll
+cat 何々.repo　　中身を確認パッケージの保管場所URLなど
+
+サービス状態確認 起動停止
+systemctl list-units --type=service は 現在の Linux サービス（systemd 管理下）の状態を一覧表示するコマンド
+systemctl status sshd.service
+dnf install httpd インストール
+systemctl status httpd.service　状態確認　inactive
+systemctl start httpd.service   この後状態確認したらactiveを確認
+systemctl stop httpd.service    この後状態確認したらinactiveへ
+systemctl restart httpd.service  再起動
+systemctl enable httpd.service  linuxサーバーが再起動したときも自動的に起動してくれる設定
+
+
+
+
+
+
+
+
+
+
+
